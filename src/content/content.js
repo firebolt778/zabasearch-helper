@@ -1,14 +1,17 @@
 const apiKey = "";
 
 // Listen for messages from background script
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractLastNames') {
-    try {
-      const lastNames = await extractLastNamesFromPage();
-      sendResponse({ success: true, lastNames });
-    } catch (error) {
-      sendResponse({ success: false, error: error.message });
-    }
+    (async () => {
+      try {
+        const lastNames = await extractLastNamesFromPage();
+        sendResponse({ success: true, lastNames });
+      } catch (error) {
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+    // Return true to indicate response will be sent asynchronously
     return true;
   }
 });
