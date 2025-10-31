@@ -24,7 +24,7 @@ async function getLastNames(text) {
       "Authorization": `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -35,7 +35,7 @@ async function getLastNames(text) {
           content: text
         }
       ],
-      max_tokens: 4096,
+      max_tokens: 8192,
       temperature: 0
     })
   });
