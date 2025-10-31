@@ -35,7 +35,7 @@ async function getLastNames(text) {
           content: text
         }
       ],
-      max_tokens: 300,
+      max_tokens: 4096,
       temperature: 0
     })
   });
