@@ -26,22 +26,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (tabs.length === 0) {
         // Open localhost if not exists
         targetTab = await chrome.tabs.create({ url: 'https://www.zabasearch.com/', active: false });
-        // Wait a bit for the page to load
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await new Promise((resolve) => {
+
+        // Wait for full load
+        await new Promise(resolve => {
+          chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+            if (tabId === targetTab.id && info.status === 'complete') {
+              chrome.tabs.onUpdated.removeListener(listener);
+              resolve();
+            }
+          });
+        });
+
+        // Now wait for the element
+        await new Promise(resolve => {
           const interval = setInterval(() => {
-            chrome.scripting.executeScript({
-              target: { tabId: targetTab.id },
-              func: () => !!document.querySelector('.containerbody')
-            }, ([result]) => {
-              if (result && result.result) {
-                clearInterval(interval);
-                resolve();
+            chrome.scripting.executeScript(
+              {
+                target: { tabId: targetTab.id },
+                func: () => Boolean(document.querySelector('.containerbody'))
+              },
+              (results) => {
+                if (results && results[0] && results[0].result) {
+                  clearInterval(interval);
+                  resolve();
+                }
               }
-            });
+            );
           }, 200);
         });
-        await new Promise(resolve => setTimeout(resolve, 500));
       } else {
         targetTab = tabs[0];
       }
@@ -49,8 +61,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // Navigate to the search URL
       await chrome.tabs.update(targetTab.id, { url: request.url });
 
-      // Wait for page to load
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for full load
+      await new Promise(resolve => {
+        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+          if (tabId === targetTab.id && info.status === 'complete') {
+            chrome.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+
+      // Now wait for the element
+      await new Promise(resolve => {
+        const interval = setInterval(() => {
+          chrome.scripting.executeScript(
+            {
+              target: { tabId: targetTab.id },
+              func: () => Boolean(document.querySelector('.containerbody'))
+            },
+            (results) => {
+              if (results && results[0] && results[0].result) {
+                clearInterval(interval);
+                resolve();
+              }
+            }
+          );
+        }, 200);
+      });
 
       // Execute script to extract data
       chrome.scripting.executeScript({

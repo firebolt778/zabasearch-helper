@@ -24,18 +24,17 @@ async function getLastNames(text) {
       "Authorization": `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "Extract all last names found in the following text, return only a JSON array called last_names of unique last names. Example: {\"last_names\": [\"Smith\", \"Brown\"]}"
+          content: "Extract all last names from the text. Return ONLY this JSON: {\"last_names\": [...]}. Unique items only."
         },
         {
           role: "user",
           content: text
         }
       ],
-      max_tokens: 8192,
       temperature: 0
     })
   });
