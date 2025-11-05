@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Google Search Data Extractor",
+  "name": "Data Extractor",
   "version": "1.0.0",
-  "description": "Extract data from Google search results and process them",
+  "description": "Extract data from search results and process them",
   "permissions": [
     "activeTab",
     "sidePanel",
@@ -10,7 +10,8 @@
     "storage"
   ],
   "host_permissions": [
-    "https://www.google.com/*",
+    "https://contactout.com/*",
+    "https://www.fastpeoplesearch.com/*",
     "https://www.zabasearch.com/*"
   ],
   "background": {
@@ -33,7 +34,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.google.com/search*"],
+      "matches": [
+        "https://www.google.com/search*",
+        "https://www.fastpeoplesearch.com/name*",
+        "https://contactout.com/dashboard/search*"
+      ],
       "js": ["content.js"]
     }
   ],

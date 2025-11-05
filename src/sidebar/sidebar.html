@@ -82,12 +82,16 @@
           <option value="wyoming">WY - Wyoming</option>
         </select>
       </div>
-      <button id="extractBtn" class="btn btn-primary">Extract Last Names</button>
+      <div class="extract-buttons-group">
+        <button id="extractGoogle" class="btn btn-danger">Google</button>
+        <button id="extractContact" class="btn btn-success">CO</button>
+        <button id="extractFast" class="btn btn-primary">FPS</button>
+      </div>
     </div>
 
     <div class="form-section">
-      <h3>Extracted Last Names</h3>
-      <textarea id="lastNames" rows="10" placeholder="Last names will appear here..."></textarea>
+      <h3>Extracted Names</h3>
+      <textarea id="nameList" rows="10" placeholder="Names will appear here..."></textarea>
 
       <button id="searchBtn" class="btn btn-success">Search & Process</button>
     </div>

@@ -3,8 +3,10 @@ const firstnameInput = document.getElementById('firstname');
 const emailPatternInput = document.getElementById('emailPattern');
 const cityInput = document.getElementById('city');
 const stateInput = document.getElementById('state');
-const lastNamesTextarea = document.getElementById('lastNames');
-const extractBtn = document.getElementById('extractBtn');
+const namesTextarea = document.getElementById('nameList');
+const extractGoogle = document.getElementById('extractGoogle');
+const extractContact = document.getElementById('extractContact');
+const extractFast = document.getElementById('extractFast');
 const searchBtn = document.getElementById('searchBtn');
 const statusDiv = document.getElementById('status');
 const resultsDiv = document.getElementById('results');
@@ -26,24 +28,66 @@ chrome.storage.local.get(['firstname', 'emailPattern', 'city', 'state'], (data) 
   });
 });
 
-// Extract last names button
-extractBtn.addEventListener('click', async () => {
-  extractBtn.disabled = true;
-  showStatus('Extracting last names from Google search results...', 'info');
+// Extract names button (Google)
+extractGoogle.addEventListener('click', async () => {
+  extractGoogle.disabled = true;
+  showStatus('Extracting names from Google search results...', 'info');
 
   try {
-    const response = await chrome.runtime.sendMessage({ action: 'extractLastNames' });
+    const response = await chrome.runtime.sendMessage({ action: 'extractNamesGoogle', firstname: firstnameInput.value.trim() });
 
     if (response && response.success) {
-      lastNamesTextarea.value = response.lastNames.join('\n');
-      showStatus(`Successfully extracted ${response.lastNames.length} last names!`, 'success');
+      namesTextarea.value = response.names.join('\n');
+      showStatus(`Successfully extracted ${response.names.length} names!`, 'success');
     } else {
-      showStatus('Error: ' + (response?.error || 'Failed to extract last names'), 'error');
+      showStatus('Error: ' + (response?.error || 'Failed to extract names'), 'error');
     }
   } catch (error) {
     showStatus('Error: ' + error.message, 'error');
   } finally {
-    extractBtn.disabled = false;
+    extractGoogle.disabled = false;
+  }
+});
+
+// Extract names button (Contact Out)
+extractContact.addEventListener('click', async () => {
+  extractContact.disabled = true;
+  showStatus('Extracting names from ContactOut ...', 'info');
+
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'extractNamesContact', firstname: firstnameInput.value.trim() });
+
+    if (response && response.success) {
+      namesTextarea.value = response.names.join('\n');
+      showStatus(`Successfully extracted ${response.names.length} names!`, 'success');
+    } else {
+      showStatus('Error: ' + (response?.error || 'Failed to extract names'), 'error');
+    }
+  } catch (error) {
+    showStatus('Error: ' + error.message, 'error');
+  } finally {
+    extractContact.disabled = false;
+  }
+});
+
+// Extract names button (Fast People Search)
+extractFast.addEventListener('click', async () => {
+  extractFast.disabled = true;
+  showStatus('Extracting names from FastPeopleSearch ...', 'info');
+
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'extractNamesFast', firstname: firstnameInput.value.trim() });
+
+    if (response && response.success) {
+      namesTextarea.value = response.names.join('\n');
+      showStatus(`Successfully extracted ${response.names.length} names!`, 'success');
+    } else {
+      showStatus('Error: ' + (response?.error || 'Failed to extract names'), 'error');
+    }
+  } catch (error) {
+    showStatus('Error: ' + error.message, 'error');
+  } finally {
+    extractFast.disabled = false;
   }
 });
 
@@ -53,30 +97,30 @@ searchBtn.addEventListener('click', async () => {
   const emailPattern = emailPatternInput.value.trim();
   const city = cityInput.value.trim();
   const state = stateInput.value.trim();
-  const lastNames = lastNamesTextarea.value.split('\n').filter(name => name.trim());
+  const names = namesTextarea.value.split('\n').filter(name => name.trim());
 
-  if (!firstname || !city || !state || lastNames.length === 0) {
-    showStatus('Please fill in all required fields and extract last names first!', 'error');
+  if (!firstname || !city || !state || names.length === 0) {
+    showStatus('Please fill in all required fields and extract names first!', 'error');
     return;
   }
 
   searchBtn.disabled = true;
   resultsDiv.innerHTML = '';
-  showStatus(`Processing ${lastNames.length} names...`, 'info');
+  showStatus(`Processing ${names.length} names...`, 'info');
 
   const allResults = [];
 
-  for (let i = 0; i < lastNames.length; i++) {
-    const lastname = lastNames[i].trim();
-    if (!lastname) continue;
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i].trim();
+    if (!name) continue;
 
-    showStatus(`Processing ${i + 1}/${lastNames.length}: ${firstname} ${lastname}...`, 'info');
+    showStatus(`Processing ${i + 1}/${names.length}: ${name}...`, 'info');
 
     // Replace all symbols in state and city with '-'
     const sanitizedState = state.replace(/[^a-zA-Z0-9]/g, '-');
     const sanitizedCity = city.replace(/[^a-zA-Z0-9]/g, '-');
     // Construct URL
-    const url = `https://www.zabasearch.com/people/${firstname}-${lastname}/${sanitizedState}/${sanitizedCity}/`;
+    const url = `https://www.zabasearch.com/people/${name.replace(" ", "-")}/${sanitizedState}/${sanitizedCity}/`;
 
     try {
       // Send message to background to fetch data
@@ -92,14 +136,14 @@ searchBtn.addEventListener('click', async () => {
         const matchedData = filterResults(response.data, emailPattern);
 
         allResults.push({
-          name: `${firstname} ${lastname}`,
+          name: name,
           url: url,
           data: matchedData,
           matched: matchedData.length > 0
         });
 
         displayResult({
-          name: `${firstname} ${lastname}`,
+          name: name,
           url: url,
           data: matchedData,
           matched: matchedData.length > 0
@@ -110,14 +154,14 @@ searchBtn.addEventListener('click', async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
     } catch (error) {
-      console.error(`Error processing ${lastname}:`, error);
+      console.error(`Error processing ${name}:`, error);
     }
   }
 
   searchBtn.disabled = false;
   const matchedLen = allResults.filter(r => r.matched).length;
   showStatus(
-    `Completed! Processed ${lastNames.length} names, found ${matchedLen} matches.`,
+    `Completed! Processed ${names.length} names, found ${matchedLen} matches.`,
     matchedLen ? 'success' : 'error'
   );
 });

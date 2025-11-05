@@ -2,11 +2,35 @@ const apiKey = "";
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'extractLastNames') {
+  if (request.action === 'extractNamesGoogle') {
     (async () => {
       try {
-        const lastNames = await extractLastNamesFromPage();
-        sendResponse({ success: true, lastNames });
+        const names = await extractNamesFromGoogle(request.firstname);
+        sendResponse({ success: true, names });
+      } catch (error) {
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+    // Return true to indicate response will be sent asynchronously
+    return true;
+  }
+  if (request.action === 'extractNamesContact') {
+    (async () => {
+      try {
+        const names = await extractNamesFromContactOut(request.firstname);
+        sendResponse({ success: true, names });
+      } catch (error) {
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+    // Return true to indicate response will be sent asynchronously
+    return true;
+  }
+  if (request.action === 'extractNamesFast') {
+    (async () => {
+      try {
+        const names = await extractNamesFromFPS(request.firstname);
+        sendResponse({ success: true, names });
       } catch (error) {
         sendResponse({ success: false, error: error.message });
       }
@@ -16,7 +40,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-async function getLastNames(text) {
+async function getNames(text, firstname) {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -28,7 +52,7 @@ async function getLastNames(text) {
       messages: [
         {
           role: "system",
-          content: "Extract all last names from the text. Return ONLY this JSON: {\"last_names\": [...]}. Unique items only."
+          content: `Extract all full names where the first or last name matches "${firstname}". Output a JSON object like this: {"names": ["First Last", ...]}. Only include unique "First Last" combinations (without middle name). Do not include anything except the JSON.`
         },
         {
           role: "user",
@@ -40,23 +64,23 @@ async function getLastNames(text) {
   });
 
   const data = await response.json();
-  // Try to parse response as JSON object with `last_names` array
-  let last_names = [];
+  // Try to parse response as JSON object with `names` array
+  let names = [];
   try {
     const content = data.choices[0].message.content;
-    const match = content.match(/\{[\s\S]*last_names[\s\S]*\}/);
+    const match = content.match(/\{[\s\S]*names[\s\S]*\}/);
     if (match) {
       const parsed = JSON.parse(match[0]);
-      if (Array.isArray(parsed.last_names)) last_names = parsed.last_names;
+      if (Array.isArray(parsed.names)) names = parsed.names;
     }
   } catch (e) {
-    // fallback or leave last_names empty
+    // fallback or leave names empty
   }
-  return { last_names };
+  return { names };
 }
 
-async function extractLastNamesFromPage() {
-  const lastNames = new Set();
+async function extractNamesFromGoogle(firstname) {
+  const nameList = new Set();
 
   // Extract from search result titles and snippets
   const searchResults = document.querySelectorAll('#search > div > div > div');
@@ -64,8 +88,28 @@ async function extractLastNamesFromPage() {
   const contents = [];
 
   searchResults.forEach(result => contents.push(result.textContent.trim()));
-  const { last_names } = await getLastNames(contents.join("\n"));
-  last_names.forEach(name => lastNames.add(name));
+  const { names } = await getNames(contents.join("\n"), firstname);
+  names.forEach(name => nameList.add(name));
 
-  return Array.from(lastNames).sort();
+  return Array.from(nameList).sort();
+}
+
+async function extractNamesFromContactOut(firstname) {
+  const nameList = new Set();
+  const contents = [];
+  const nameElements = document.querySelectorAll(".search-container span.hover\\:underline");
+  nameElements.forEach(el => contents.push(el.textContent));
+  const { names } = await getNames(contents.join("\n"), firstname);
+  names.forEach(name => nameList.add(name));
+  return Array.from(nameList).sort();
+}
+
+async function extractNamesFromFPS(firstname) {
+  const nameList = new Set();
+  const contents = [];
+  const nameElements = document.querySelectorAll("span.larger");
+  nameElements.forEach(el => contents.push(el.textContent));
+  const { names } = await getNames(contents.join("\n"), firstname);
+  names.forEach(name => nameList.add(name));
+  return Array.from(nameList).sort();
 }

@@ -6,11 +6,35 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 // Listen for messages from sidebar
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'extractLastNames') {
-    // Send message to content script to extract last names
+  if (request.action === 'extractNamesGoogle') {
+    // Send message to content script to extract names from Google
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'extractLastNames' }, (response) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'extractNamesGoogle', firstname: request.firstname }, (response) => {
+          sendResponse(response);
+        });
+      }
+    });
+    return true; // Keep message channel open for async response
+  }
+
+  if (request.action === 'extractNamesContact') {
+    // Send message to content script to extract names from ContactOut
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'extractNamesContact', firstname: request.firstname }, (response) => {
+          sendResponse(response);
+        });
+      }
+    });
+    return true; // Keep message channel open for async response
+  }
+
+  if (request.action === 'extractNamesFast') {
+    // Send message to content script to extract names from FastPeopleSearch
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'extractNamesFast', firstname: request.firstname }, (response) => {
           sendResponse(response);
         });
       }
