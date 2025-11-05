@@ -115,7 +115,11 @@ searchBtn.addEventListener('click', async () => {
   }
 
   searchBtn.disabled = false;
-  showStatus(`Completed! Processed ${lastNames.length} names, found ${allResults.filter(r => r.matched).length} matches.`, 'success');
+  const matchedLen = allResults.filter(r => r.matched).length;
+  showStatus(
+    `Completed! Processed ${lastNames.length} names, found ${matchedLen} matches.`,
+    matchedLen ? 'success' : 'error'
+  );
 });
 
 function filterResults(data, emailPattern) {
@@ -132,6 +136,7 @@ function filterResults(data, emailPattern) {
 }
 
 function displayResult(result) {
+  if (!result.matched) return;
   const resultEl = document.createElement('div');
   resultEl.className = `result-item ${result.matched ? 'matched' : ''}`;
 
