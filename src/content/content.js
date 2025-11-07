@@ -145,11 +145,12 @@ async function extractNamesFromContactOut(firstname) {
       break;
     } else {
       nextBtn.click();
+      pageNum++;
       await new Promise(resolve => setTimeout(resolve, 1000));
       await new Promise(resolve => {
         const checkBtn = () => {
           const submitBtn = document.querySelector('button[type="submit"]');
-          if (submitBtn && submitBtn.classList.contains("bg-primary-300")) {
+          if (submitBtn && submitBtn.classList.contains("bg-primary-700")) {
             resolve();
           } else {
             setTimeout(checkBtn, 200);
