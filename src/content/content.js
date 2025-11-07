@@ -180,7 +180,8 @@ async function extractNamesFromContactOut(firstname) {
       await new Promise(resolve => {
         const checkBtn = () => {
           const submitBtn = document.querySelector('button[type="submit"]');
-          if (submitBtn && submitBtn.classList.contains("bg-primary-700")) {
+          const nextBtn = document.querySelectorAll('div[data-testid="search-pagination"] button')[1];
+          if (submitBtn && submitBtn.classList.contains("bg-primary-700") || nextBtn && nextBtn.classList.contains("text-gray-300")) {
             resolve();
           } else {
             setTimeout(checkBtn, 200);
