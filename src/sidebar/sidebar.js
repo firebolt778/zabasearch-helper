@@ -7,6 +7,7 @@ const namesTextarea = document.getElementById('nameList');
 const extractGoogle = document.getElementById('extractGoogle');
 const extractContact = document.getElementById('extractContact');
 const extractFast = document.getElementById('extractFast');
+const applyBarkDataBtn = document.getElementById('applyBarkData');
 const searchBtn = document.getElementById('searchBtn');
 const statusDiv = document.getElementById('status');
 const resultsDiv = document.getElementById('results');
@@ -88,6 +89,71 @@ extractFast.addEventListener('click', async () => {
     showStatus('Error: ' + error.message, 'error');
   } finally {
     extractFast.disabled = false;
+  }
+});
+
+// Helper function to map state name to select option value
+function mapStateToSelectValue(stateName) {
+  if (!stateName) return '';
+  
+  // Convert to lowercase and replace spaces with hyphens to match select option format
+  // Examples: "new york" -> "new-york", "california" -> "california"
+  return stateName.toLowerCase().trim().replace(/\s+/g, '-');
+}
+
+// Apply Bark data button
+applyBarkDataBtn.addEventListener('click', async () => {
+  applyBarkDataBtn.disabled = true;
+  showStatus('Extracting data from Bark dashboard...', 'info');
+
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'getBarkData' });
+
+    if (response && response.success && response.data) {
+      const data = response.data;
+      
+      // Extract first name from client name (assuming format is "First Last" or just "First")
+      if (data.client) {
+        const clientNameParts = data.client.trim().split(/\s+/);
+        const firstName = clientNameParts[0] || '';
+        if (firstName) {
+          firstnameInput.value = firstName;
+          // Save to storage
+          chrome.storage.local.set({ firstname: firstName });
+        }
+      }
+      
+      // Set city
+      if (data.city) {
+        cityInput.value = data.city;
+        chrome.storage.local.set({ city: data.city });
+      }
+      
+      // Set state - map to select option value format
+      if (data.state) {
+        const stateValue = mapStateToSelectValue(data.state);
+        if (stateValue) {
+          // Check if the option exists in the select
+          const optionExists = Array.from(stateInput.options).some(opt => opt.value === stateValue);
+          if (optionExists) {
+            stateInput.value = stateValue;
+            chrome.storage.local.set({ state: stateValue });
+          } else {
+            console.warn(`State value "${stateValue}" not found in select options`);
+            // Try to set it anyway - browser will ignore if invalid
+            stateInput.value = stateValue;
+          }
+        }
+      }
+      
+      showStatus('Successfully applied Bark data to search params!', 'success');
+    } else {
+      showStatus('Error: ' + (response?.error || 'Failed to extract data from Bark dashboard. Make sure you are on a Bark dashboard page.'), 'error');
+    }
+  } catch (error) {
+    showStatus('Error: ' + error.message, 'error');
+  } finally {
+    applyBarkDataBtn.disabled = false;
   }
 });
 

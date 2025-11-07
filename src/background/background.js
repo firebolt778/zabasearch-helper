@@ -4,6 +4,25 @@ chrome.action.onClicked.addListener(async (tab) => {
   await chrome.sidePanel.open({ windowId: tab.windowId });
 });
 
+// Listen for keyboard commands
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'copy-bark-content') {
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs[0] && tabs[0].url && tabs[0].url.includes('bark.com/sellers/dashboard')) {
+        // Send message to content script to extract and copy content
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'copyBarkContent' }, (response) => {
+          if (chrome.runtime.lastError) {
+            window.alert('Error: Content script may not be loaded. Please reload the page.', chrome.runtime.lastError.message);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error in copy-bark-content command:', error);
+    }
+  }
+});
+
 // Listen for messages from sidebar
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractNamesGoogle') {
@@ -37,6 +56,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'extractNamesFast', firstname: request.firstname }, (response) => {
           sendResponse(response);
         });
+      }
+    });
+    return true; // Keep message channel open for async response
+  }
+
+  if (request.action === 'getBarkData') {
+    // Get extracted data from Bark dashboard
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].url && tabs[0].url.includes('bark.com/sellers/dashboard')) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'getBarkData' }, (response) => {
+          sendResponse(response);
+        });
+      } else {
+        sendResponse({ success: false, error: 'Please navigate to a Bark dashboard page first' });
       }
     });
     return true; // Keep message channel open for async response

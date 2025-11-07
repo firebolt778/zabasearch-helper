@@ -12,7 +12,8 @@
   "host_permissions": [
     "https://contactout.com/*",
     "https://www.fastpeoplesearch.com/*",
-    "https://www.zabasearch.com/*"
+    "https://www.zabasearch.com/*",
+    "https://www.bark.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -30,6 +31,13 @@
         "mac": "Command+Shift+Y"
       },
       "description": "Toggle sidebar"
+    },
+    "copy-bark-content": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
+      },
+      "description": "Copy project details from bark dashboard"
     }
   },
   "content_scripts": [
@@ -37,7 +45,8 @@
       "matches": [
         "https://www.google.com/search*",
         "https://www.fastpeoplesearch.com/name*",
-        "https://contactout.com/dashboard/search*"
+        "https://contactout.com/dashboard/search*",
+        "https://www.bark.com/sellers/dashboard/*"
       ],
       "js": ["content.js"]
     }
