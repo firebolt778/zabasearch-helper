@@ -95,7 +95,7 @@ extractFast.addEventListener('click', async () => {
 // Helper function to map state name to select option value
 function mapStateToSelectValue(stateName) {
   if (!stateName) return '';
-  
+
   // Convert to lowercase and replace spaces with hyphens to match select option format
   // Examples: "new york" -> "new-york", "california" -> "california"
   return stateName.toLowerCase().trim().replace(/\s+/g, '-');
@@ -111,24 +111,24 @@ applyBarkDataBtn.addEventListener('click', async () => {
 
     if (response && response.success && response.data) {
       const data = response.data;
-      
+
       // Extract first name from client name (assuming format is "First Last" or just "First")
       if (data.client) {
-        const clientNameParts = data.client.trim().split(/\s+/);
-        const firstName = clientNameParts[0] || '';
-        if (firstName) {
-          firstnameInput.value = firstName;
-          // Save to storage
-          chrome.storage.local.set({ firstname: firstName });
-        }
+        firstnameInput.value = data.client;
+        chrome.storage.local.set({ firstname: data.client });
       }
-      
+
+      if (data.email) {
+        emailPatternInput.value = data.email;
+        chrome.storage.local.set({ emailPattern: data.email });
+      }
+
       // Set city
       if (data.city) {
         cityInput.value = data.city;
         chrome.storage.local.set({ city: data.city });
       }
-      
+
       // Set state - map to select option value format
       if (data.state) {
         const stateValue = mapStateToSelectValue(data.state);
@@ -145,7 +145,7 @@ applyBarkDataBtn.addEventListener('click', async () => {
           }
         }
       }
-      
+
       showStatus('Successfully applied Bark data to search params!', 'success');
     } else {
       showStatus('Error: ' + (response?.error || 'Failed to extract data from Bark dashboard. Make sure you are on a Bark dashboard page.'), 'error');
