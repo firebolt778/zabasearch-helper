@@ -1,5 +1,3 @@
-const apiKey = "";
-
 function processNames(names = [""]) {
   const newList = new Set();
   for (let name of names) {
@@ -61,6 +59,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function getNames(text, firstname) {
+  const apiKey = await new Promise((resolve, reject) => {
+    chrome.storage.local.get(['apiKey'], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve(result.apiKey);
+      }
+    });
+  });
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
