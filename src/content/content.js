@@ -163,7 +163,7 @@ async function extractNamesFromGoogle(firstname) {
 async function extractNamesFromContactOut(firstname) {
   const nameList = new Set();
   let pageNum = 1;
-  while (pageNum < 21) {
+  while (pageNum < 16) {
     const contents = [];
     const nameElements = document.querySelectorAll(".search-container span.hover\\:underline");
     nameElements.forEach(el => contents.push(el.textContent));
