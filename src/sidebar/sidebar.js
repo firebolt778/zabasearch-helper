@@ -198,8 +198,12 @@ searchBtn.addEventListener('click', async () => {
       });
 
       if (response && response.data) {
-        // Check conditions - you can modify this logic
-        const matchedData = filterResults(response.data, emailPattern);
+        const apiKey = await new Promise((resolve) => {
+          chrome.storage.local.get(['apiKey'], (result) => {
+            resolve(result.apiKey);
+          });
+        });
+        const matchedData = filterResults(response.data, emailPattern, apiKey);
 
         allResults.push({
           name: name,
@@ -232,7 +236,8 @@ searchBtn.addEventListener('click', async () => {
   );
 });
 
-function filterResults(data, emailPattern) {
+function filterResults(data, emailPattern, apiKey) {
+  if (!apiKey) return data;
   if (!emailPattern) return data;
 
   return data.filter(item => {
